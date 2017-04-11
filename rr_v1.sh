@@ -1,4 +1,4 @@
-#Last update 2:52 1/8/2016 by Daehan Chi.
+#Last update 9/19/2016 by Daehan Chi.
 #-----------------------INSTRUCTION------------------------------------------
 #The purpose of this script is to update and maintains perfect condition.
 #This functions are followings:
@@ -11,98 +11,17 @@
 
 
 #!/bin/bash
-OfficeDmg="Office2011-1459Update_EN-US"
+OfficeDmg="Office2011-1459Update_EN-US.dmg"
 OfficeUpdateVersion="2011\ 14.5.9\ "
 FirefoxUpdateVersion="43.0.4" #http://www.macupdate.com/app/mac/10700/firefox
+FlashDmg="AdobeFlashPlayer_23au_a_install.dmg"
+
 #Set system doesn't sleep.
 #The reason is that the dafult sleeping time for our lab is 15 mins of display sleep time and 20 mins of system sleep time, and the script won't finish until the time. So if the script running over 20 mins it stops and goto sleep.
-function prev_set()
-{
-echo 
-echo "***********SET SYSTEMSLEEP TIME TO NEVER****"
-echo 
-echo
-sudo pmset sleep 0                        
 
-#Set display doesn't sleep.
-echo 
-echo "*********SET DISPLAY SLEEP TIME TO NEVER****"
-echo 
-echo 
-sudo pmset displaysleep 0                 
-}
-#Delete all users including starting two zeros. 
-function del_users()
-{
-echo 
-echo "***********REMOVING USER DIRECTORY**********"
-echo 
-echo
-sudo rm -rf /Users/00*
-}
-#Update microsoft office. the .dmg file must be with Desktop of admin
-#Version of .dmg fle should be updated manually so far.
-function mic_update()
-{
-echo 
-echo "****************MICROSOFT UPDATE************"
-echo 
-echo
-hdiutil mount Users/admin/Desktop/$OfficeDmg.dmg
-#sudo installer -package /Volumes/Microsoft\ Office\ 2011\ 14.5.9\ Update/Office\ 2011\ 14.5.9\ Update.pkg -target "/Volumes/Macintosh HD"
-sudo installer -package /Volumes/Microsoft\ Office\ $OfficeUpdateVersion Update/Office\ $OfficeUpdateVersion Update.pkg -target "/Volumes/Macintosh HD"
-hdiutil unmount /Volumes/Microsoft\ Office\ $OfficeUpdateVersion Update/
-}
-#Update softwares in appstore
-function app_update()
-{
-echo 
-echo "***********UPDATING SOFTWARES***************"
-echo 
-echo
-sudo softwareupdate -i -a
-}
-#Run repair Permissions. It makes computer run faster.
-function repair_permission()
-{
-echo 
-echo "***********REPAIRING PERMISSIONS************"
-echo 
-echo
-sudo diskutil repairPermissions "Macintosh HD"
-}
-function firfox_update()
-{
-echo
-echo "*******""***FIREFOX UPDATE******************"
-echo
-hdiutil mount /Users/admin/Desktop/Firefox\ $FirefoxUpdateVersion.dmg
-cp -R /Volumes/Firefox/firefox.app /Application
-}
-#Change the power management setting to the default.
-function aft_set()
-{
-echo 
-echo "***********SET SYSTEMSLEEP TIME TO 15 MINS**"
-echo 
-echo
-sudo pmset displaysleep 15
-
-echo 
-echo "***********SET SYSTEMSLEEP TIME TO 20 MINS**"
-echo 
-echo
-sudo pmset sleep 20
-}
-#Turn power off.
-function shutdown()
-{
-echo 
-echo "***********SYSTEM SHUTING DOWN SOON*********"
-echo 
-sudo shutdown -h now
-}
-
+source ./functions/functions.sh
+source ./functions/update.sh
+source ./functions/setup.sh
 #               UI      
 
 echo “Run the entire script? \(y/n\)”
@@ -117,18 +36,23 @@ prev_set
 if [ "$answer" == "y" ] ; then
 {    
     del_users
-    mic_update
     app_update
-	firfox_update
+	firefox_update
+    chrome_update
+    flashPlayer_update
+    msOffice_update
     repair_permission
 }
 else [ "$answer" == "n" ]
 {
     echo "1. Delete all students accounts"
 	echo "2. Update Microsoft Office"
-	echo "3. Execute Appstore Update"
-	echo "4. Run repair Permission"
-	echo "5. Update Firefox"
+    echo "3. Update Firefox"
+    echo "4. Update Chrome"
+    echo "5. Update Flash Player"
+	echo "6. Execute Appstore Update"
+	echo "7. Run repair Permission"
+	
     read NUMBERS
     
     for number in $NUMBERS
@@ -136,13 +60,17 @@ else [ "$answer" == "n" ]
         if [ "$number" == "1" ] ; then
   	        del_users
 		elif [ "$number" == "2" ] ; then
-	        mic_update
-      	elif [ "$number" == "3" ] ; then
+	        msOffice_update
+        elif [ "$number" == "3" ] ; then
+            firefox_update
+        elif [ "$number" == "4" ] ; then
+            chrome_update
+        elif [ "$number" == "5" ] ; then
+            flashPlayer_update
+      	elif [ "$number" == "6" ] ; then
    	        app_update
-   	    elif [ "$number" == "4" ] ; then
+   	    elif [ "$number" == "7" ] ; then
    	        repair_permission
-		elif [ "$number" == "5" ] ; then
-			firfox_update
    	    fi
     done
 }
@@ -155,7 +83,7 @@ if [ "$power" == "1" ] ; then
 {
 	sudo shutdown -r now
 }
-else [ "$power" == "2" ] ; then
+elif [ "$power" == "2" ] ; then
 {
 	sudo shutdown -h now
 }
